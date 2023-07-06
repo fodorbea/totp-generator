@@ -1,10 +1,6 @@
-﻿
-
-
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
-using System.Timers;
+
 
 class TotpGenerator
 {
@@ -16,7 +12,7 @@ class TotpGenerator
         //get byte array format of the secret
         byte[] combinedSecretAsByteArray = Encoding.UTF8.GetBytes(combinedSecretAsString);
 
-        //use SHA512 HMAC method
+        //use SHA512 HMAC method to get a 6 digit code
         var hmac = new HMACSHA512();
         var computedHash = hmac.ComputeHash(combinedSecretAsByteArray);
 
@@ -35,9 +31,9 @@ class TotpGenerator
 
 
     static void GetCode(string id)
-    {
+    {            
         var code = GeneratePassword(id);
-        Console.WriteLine($"Your code is " + code + " and it expires at " + DateTime.UtcNow.AddSeconds(30).ToString("HH:mm:ss"));
+        Console.WriteLine($"Your code is " + code + " and it expires at " + DateTime.UtcNow.AddSeconds(30).ToString("HH:mm:ss"));   
     }
 
 
@@ -48,22 +44,27 @@ class TotpGenerator
         Console.Write("Enter userId: ");
         userId = Console.ReadLine();
 
-        //initial
-        GetCode(userId);
+        
+        if(userId != null)
+        {
+            //initial
+            GetCode(userId);
 
-        var timer = new System.Timers.Timer();
-        timer.Elapsed += (sender, args) => OnTimedEvent(sender, userId);
-        timer.Interval = 30000;
-        timer.Enabled = true;
+            //create autogeneration mechanism and run GetCode method every 30s
+            var timer = new System.Timers.Timer();
+            timer.Elapsed += (sender, args) => OnTimedEvent(sender, userId);
+            timer.Interval = 30000;
+            timer.Enabled = true;
+        }
+       
 
-        Console.WriteLine("Starting auto-generation. Press \'q\' to stop generation.");
+        Console.WriteLine("Starting autogeneration. Press \'q\' to stop generation.");
         while (Console.Read() != 'q') ;
 
     }
 
     private static void OnTimedEvent(object sender, string userId)
     {
-        var code = GeneratePassword(userId);
-        Console.WriteLine($"Your code is " + code + " and it expires at " + DateTime.UtcNow.AddSeconds(30).ToString("HH:mm:ss"));
+        GetCode(userId);
     }
 }
